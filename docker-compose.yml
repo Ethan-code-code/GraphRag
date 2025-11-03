@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j-graphdb
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NEO4J_dbms_security_auth__enabled=true
+      - NEO4J_dbms_logs_debug_level=INFO
+      # Increase memory limits to handle large deletions
+      - NEO4J_dbms_memory_heap_max__size=4G
+      - NEO4J_dbms_memory_transaction_max__size=2G
+    ports:
+      - "7474:7474"   # HTTP UI
+      - "7687:7687"   # Bolt
+    volumes:
+      - ./neo4j-data/data:/data
+      - ./neo4j-data/logs:/logs
+      - ./neo4j-data/import:/var/lib/neo4j/import
+      - ./neo4j-data/plugins:/plugins
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD:-ArifShopu1}", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ingest:
+    build: .
+    container_name: graph-ingest
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Override URI to use service name in Docker network
+      - NEO4J_URI=bolt://neo4j:7687
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./drive-download-20251029T100745Z-1-001/source_data:/app/data:ro
+      - ./ingest_checkpoint.json:/app/ingest_checkpoint.json
+      - ./.env:/app/.env:ro
+    command: python ingest.py /app/data
+
+  backup:
+    build: .
+    container_name: graph-backup
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_CONTAINER=neo4j-graphdb
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./neo4j-data:/app/neo4j-data:ro
+      - ./backups:/app/backups
+      - ./backup.py:/app/backup.py
+    command: python backup.py --type all --compress
+

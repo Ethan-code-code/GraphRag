@@ -1,0 +1,12 @@
+[
+    {
+      "question": "What is the maximum duration of a commercial lease?",
+      "type": "objective",
+      "category": "factual"
+    },
+    {
+      "question": "What is the filing fee for an appeal in civil court?",
+      "type": "objective",
+      "category": "factual"
+    }
+  ]

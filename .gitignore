@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# Database data
+neo4j-data/
+chroma_db/
+*.db
+*.sqlite
+
+# Backups
+backups/
+*.dump
+*.tar.gz
+*.backup
+
+# Checkpoints
+ingest_checkpoint.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
